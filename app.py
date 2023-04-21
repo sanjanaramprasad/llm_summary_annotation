@@ -140,8 +140,10 @@ def back(current_uuid):
         if current_uuid in uuids:
             current_uuid_idx = uuids.index(current_uuid)
             back_uuid = uuids[current_uuid_idx - 1]
-        else:
+        elif uuids:
             back_uuid =  uuids[-1]
+        else:
+            back_uuid = current_uuid
         # summary_uuid = con.execute("""SELECT summary_uuid FROM generated_summaries where uuid='{}';""".format(back_uuid)).fetchone()
         print(back_uuid)
         return annotate(back_uuid)

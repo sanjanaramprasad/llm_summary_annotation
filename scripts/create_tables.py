@@ -9,7 +9,9 @@ import sqlite3
 
 db_path = "../data/summaries_test.db"  
 
-create_cmds = ['''CREATE TABLE generated_summaries (
+create_cmds = [  
+
+'''CREATE TABLE generated_summaries (
     uuid INTEGER PRIMARY KEY AUTOINCREMENT, 
     summary_uuid TEXT NOT NULL ,
     summ_id TEXT NOT NULL, 
@@ -20,9 +22,14 @@ create_cmds = ['''CREATE TABLE generated_summaries (
 
 '''CREATE TABLE label (
     uuid INTEGER PRIMARY KEY AUTOINCREMENT, 
+    user_id TEXT NOT NULL,
     summary_uuid TEXT NOT NULL,
+    summ_id TEXT NOT NULL, 
+    system_id TEXT NOT NULL,
     label_type TEXT NOT NULL,
-    score INTEGER NOT NULL
+    summary TEXT NOT NULL,
+    nonfactual_sentences ENUM NOT NULL,
+    article TEXT
 );''']
 
 
@@ -38,5 +45,5 @@ def create_table(create_str):
     conn.close()
 
 
-for create_str in create_cmds:
+for create_str in create_cmds[-2:]:
     create_table(create_str)

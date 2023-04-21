@@ -1,0 +1,140 @@
+<!doctype html>
+
+<head>
+    <style>
+
+        .container {
+			position: relative;
+			height: 100px;
+			background-color: #eee;
+		}
+
+		#black-button {
+			position: absolute;
+			left: 10px;
+			background-color: black;
+			color: white;
+			padding: 5px 20px;
+			border: none;
+			border-radius: 10px;
+			font-size: 16px;
+			font-weight: bold;
+			cursor: pointer;
+		}
+
+        #submit-button {
+			position: absolute;
+			right: 100px;
+			background-color: green;
+			color: white;
+			padding: 5px 20px;
+			border: none;
+			border-radius: 10px;
+			font-size: 16px;
+			font-weight: bold;
+			cursor: pointer;
+		}
+
+        #clear-button {
+			position: absolute;
+			left: 100px;
+			background-color: orange;
+			color: white;
+			padding: 5px 20px;
+			border: none;
+			border-radius: 10px;
+			font-size: 16px;
+			font-weight: bold;
+			cursor: pointer;
+		}
+	</style>
+
+    <title>Annotation Dashboard</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      $(function() {
+        $(window).on('beforeunload', function() {
+          $.ajax({
+            url: '/logout',
+            type: 'POST',
+            async: false
+          });
+        });
+      });
+    </script>
+  </head>
+
+<title>Annotate</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<section class="content">
+  
+  
+  {% block content %}
+
+
+
+  <br/><br/>
+  <!-- <h1> Article </h1>  -->
+  <div id="article" style="background-color: lightgrey;border: 15px lightgreyn;padding: 10px;margin: 20px; border-radius: 25px;">
+    <h1> Article </h1>
+    <p style ="color: darkblue; line-height: 1.5;"> {{ article }}</p>
+
+    <br/><br/>
+  </div>
+
+  
+  <div id="system-summary" style="background-color: lightgoldenrodyellow;border: 15px lightgreyn;padding: 10px;margin: 20px; border-radius: 15px;">
+    <h2>System Summary</h2>
+    <p style ="color: darkblue; line-height: 1.5;">{{ summary }}</p>
+  </div>
+
+
+<br/><br/>
+<hr>
+ <div id=".container">
+ 
+  <form action="/save_annotation/{{summ_uuid}}" method="post">
+
+ 
+        <h3> Select the sentences below (from the summary) if they are inconsistent with the source article. Otherwise leave them blank</h3>
+        <!-- <input type="checkbox" name = "checkbox_100" value = "{{summ_sents[0]}}"> {{summ_sents[0]}} </input>
+        <br>
+        <input type="checkbox" name = "checkbox_200" value = "{{summ_sents[0]}}"> {{summ_sents[0]}} </input>
+        <br>
+        <input type="checkbox" name = "checkbox_300" value = "{{summ_sents[0]}}"> {{summ_sents[0]}} </input>
+        <br>
+        <input type="checkbox" name = "checkbox_400" value = "{{summ_sents[0]}}"> {{summ_sents[0]}} </input>
+        <br>
+        <input type="checkbox" name = "checkbox_500" value = "{{summ_sents[0]}}"> {{summ_sents[0]}} </input>
+        <br>
+        <input type="checkbox" name = "checkbox_600" value = "{{summ_sents[0]}}"> {{summ_sents[0]}} </input>
+        <br> -->
+
+        {% for sent in summ_sents %}
+                <input type="checkbox" name = "checkbox_{{loop.index}}" value = "{{sent}}"> {{sent}} </input>
+                <!-- <option value="{{ sent}}">{{ sent}}</option> -->
+                <br>
+        {% endfor %}
+       
+
+        <input name="summ_id" value="{{summ_id}}" type=hidden>
+        <input name="system_id" value="{{system_id}}" type=hidden>
+        <input name="summary" value="{{summary}}" type=hidden>
+        <input name="article" value="{{article}}" type=hidden>
+        <input name="submit_var" value="{{summ_sents |length}}" type=hidden>
+        <br>
+            
+</div>
+
+<button id="clear-button" name = "button" value = "clear">Clear</button>
+<button id="submit-button" name = "button" value = "submit"> Submit</button>
+<button id="black-button" name = "button" value = "back">Back</button>
+
+
+
+
+  {% endblock %}
+</form>
+</div>
+
+</section>

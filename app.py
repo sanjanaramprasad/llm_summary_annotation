@@ -31,7 +31,8 @@ login_manager.init_app(app)
 
 # User class example
 class User:
-    def __init__(self, username, password):
+    def __init__(self, id, username, password):
+        self.id = id
         self.username = username
         self.password_hash = generate_password_hash(password)
         
@@ -54,9 +55,9 @@ class User:
 
 def get_users():
     users = {
-    "sanjana": User("sanjana", "zR46"),
-    "byron": User("byron", "fJ89"),
-    "kundan": User("kundan", "8f*7")
+    "sanjana": User(1, "sanjana", "zR46"),
+    "byron": User(2, "byron", "fJ89"),
+    "kundan": User(3, "kundan", "8f*7")
     }
     return users
 
@@ -119,13 +120,14 @@ def get_summary_article_for_uid(summary_uuid) -> Tuple[str]:
 def annotate(summary_uuid):
     # uid is a unique identifier for a *generated*
     # summary. 
+    username = current_user.username
     article, summary, summ_uuid, summ_id, system_id= get_summary_article_for_uid(summary_uuid)
     summ_sents = list(nlp(summary).sents)
 
     
     
 
-    return render_template("annotate.html", article= article, summary = summary, summ_sents = summ_sents,  summ_uuid = summ_uuid, summ_id = summ_id, system_id = system_id)
+    return render_template("annotate.html", username = username, article= article, summary = summary, summ_sents = summ_sents,  summ_uuid = summ_uuid, summ_id = summ_id, system_id = system_id)
 
 @login_required
 def back(current_uuid):
@@ -189,7 +191,7 @@ def save_annotation(uid):
     button_val = str(request.form['button'])
     
     if button_val == 'submit':
-        user_id = current_user.username
+        username = str(request.form['username'])
         summ_id = str(request.form['summ_id'])
         system_id = str(request.form['system_id'])
         label_type = "binary"
@@ -198,7 +200,7 @@ def save_annotation(uid):
 
         with sqlite3.connect(db_path) as con:
             con.execute("""INSERT INTO label (user_id, summary_uuid, summ_id, system_id, label_type, summary, nonfactual_sentences, article) VALUES (?, ?, ?, ?, ?, ? ,?, ?);""",
-                                                            (user_id, uid, summ_id, system_id, label_type, summary, ','.join(checked_values), article))
+                                                            (username, uid, summ_id, system_id, label_type, summary, ','.join(checked_values), article))
 
         
         return next()

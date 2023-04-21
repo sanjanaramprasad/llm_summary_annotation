@@ -154,10 +154,10 @@ def back(current_uuid):
 def next():
     ''' pick a rando prediction in the system that hasn't been annotated, display it. '''
     with sqlite3.connect(db_path) as con:
-        
+        username = current_user.username
         # print(con.execute("SELECT * FROM label").fetchall())
         q_str = """SELECT summary_uuid FROM generated_summaries WHERE NOT EXISTS (
-                    SELECT * FROM label WHERE generated_summaries.summary_uuid = label.summary_uuid) 
+                    SELECT * FROM label WHERE generated_summaries.summary_uuid = label.summary_uuid AND username = label.user_id) 
                       ORDER BY summary_uuid, RANDOM() LIMIT 1;"""
 
 

@@ -157,7 +157,7 @@ def next():
         username = current_user.username
         # print(con.execute("SELECT * FROM label").fetchall())
         q_str = f"""SELECT summary_uuid FROM generated_summaries WHERE NOT EXISTS (
-                    SELECT * FROM label WHERE generated_summaries.summary_uuid = label.summary_uuid AND {username} = label.user_id) 
+                    SELECT * FROM label WHERE generated_summaries.summary_uuid = label.summary_uuid AND label.user_id = {username} ) 
                       ORDER BY summary_uuid, RANDOM() LIMIT 1;"""
 
 

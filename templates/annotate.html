@@ -75,19 +75,20 @@
 
   <br/><br/>
   <!-- <h1> Article </h1>  -->
-  <div id="article" style="background-color: lightgrey;border: 15px lightgreyn;padding: 10px;margin: 20px; border-radius: 25px;">
-    <h1> Article </h1>
-    <p style ="color: darkblue; line-height: 1.5;"> {{ article }}</p>
+  <div style="width: 100%; overflow: hidden;">
+    <div id="article" style="width: 900px; height:440px;float: left; overflow-y:scroll;background-color: lightgrey;border: 15px lightgreyn;padding: 10px;margin: 20px; border-radius: 25px;">
+        <h1> Article </h1>
+        <p style ="color: darkblue; line-height: 1.5;"> {{ article }}</p>
 
-    <br/><br/>
-  </div>
+        <br/><br/>
+    </div>
 
-  
-  <div id="system-summary" style="background-color: lightgoldenrodyellow;border: 15px lightgreyn;padding: 10px;margin: 20px; border-radius: 15px;">
-    <h2>System Summary</h2>
-    <p style ="color: darkblue; line-height: 1.5;">{{ summary }}</p>
-  </div>
-
+    <!-- border: 15px lightgreyn;padding: 10px;margin: 20px; border-radius: 15px; ">-->
+    <div id="system-summary" style="width: 900px; height:440px;float: right; background-color: lightgoldenrodyellow;border: 15px lightgreyn;padding: 10px;margin: 12px; border-radius: 25px;">
+        <h2>System Summary</h2>
+        <p style ="color: darkblue; line-height: 1.5;">{{ summary }}</p>
+    </div>
+</div>
 
 <br/><br/>
 <hr>

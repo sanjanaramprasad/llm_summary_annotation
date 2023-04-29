@@ -7,19 +7,12 @@ import json
 import pandas as pd 
 import sqlite3
 
-db_path = "../data/summaries_test.db"  
+db_path = "../data/summaries_news_sample.db"  
 
 create_cmds = [  
 
-'''CREATE TABLE generated_summaries (
-    uuid INTEGER PRIMARY KEY AUTOINCREMENT, 
-    summary_uuid TEXT NOT NULL ,
-    summ_id TEXT NOT NULL, 
-    system_id TEXT NOT NULL, 
-    summary TEXT NOT NULL,
-    article TEXT
-);''',
 
+'''DROP table label;''',
 '''CREATE TABLE label (
     uuid INTEGER PRIMARY KEY AUTOINCREMENT, 
     user_id TEXT NOT NULL,

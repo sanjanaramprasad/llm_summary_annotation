@@ -154,8 +154,8 @@ def back(current_uuid):
     with sqlite3.connect(db_path) as con:
         
         # print(con.execute("SELECT * FROM label").fetchall())
-
-        q_str = """SELECT summary_uuid FROM label ORDER BY summary_uuid;"""
+        username = current_user.username
+        q_str = f"""SELECT summary_uuid FROM label WHERE label.user_id = '{username}' ORDER BY summary_uuid;"""
         uuids = con.execute(q_str).fetchall()
         uuids = [each[0] for each in uuids]
         print('ALL LABELED', uuids)

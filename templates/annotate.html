@@ -47,6 +47,47 @@
 			font-weight: bold;
 			cursor: pointer;
 		}
+    
+        
+		input[type="checkbox"]{
+            -webkit-appearance: initial;
+            appearance: initial;
+            background: gray;
+            width: 13px;
+            height: 13px;
+            border: 2px solid black;;
+            position: relative;
+        }
+        input[type="checkbox"]:checked {
+            background: red;
+        }
+        input[type="checkbox"]:checked:after {
+            /* Heres your symbol replacement */
+            content: "X";
+            color: #fff;
+            /* The following positions my tick in the center, 
+            * but you could just overlay the entire box
+            * with a full after element with a background if you want to */
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            -webkit-transform: translate(-50%,-50%);
+            -moz-transform: translate(-50%,-50%);
+            -ms-transform: translate(-50%,-50%);
+            transform: translate(-50%,-50%);
+            /*
+            * If you want to fully change the check appearance, use the following:
+            * content: " ";
+            * width: 100%;
+            * height: 100%;
+            * background: blue;
+            * top: 0;
+            * left: 0;
+            */
+        }
+ 
+
+
 	</style>
 
     <title>Annotation Dashboard</title>
@@ -76,7 +117,7 @@
   <br/><br/>
   <!-- <h1> Article </h1>  -->
   <div style="width: 100%; overflow: hidden;">
-    <div id="article" style="width: 900px; height:440px;float: left; overflow-y:scroll;background-color: lightgrey;border: 15px lightgreyn;padding: 10px;margin: 20px; border-radius: 25px;">
+    <div id="article" style="width:45%; height:440px;float: left;overflow:auto;background-color: lightgrey;border: 15px lightgreyn;padding: 10px;margin: 12px; border-radius: 25px;">
         <h1> Article </h1>
         <p style ="color: darkblue; line-height: 1.5;"> {{ article }}</p>
 
@@ -84,7 +125,7 @@
     </div>
 
     <!-- border: 15px lightgreyn;padding: 10px;margin: 20px; border-radius: 15px; ">-->
-    <div id="system-summary" style="width: 900px; height:440px;float: right; background-color: lightgoldenrodyellow;border: 15px lightgreyn;padding: 10px;margin: 12px; border-radius: 25px;">
+    <div id="system-summary" style="width:45%; height:440px;float: right; background-color: lightgoldenrodyellow;border: 15px lightgreyn;padding: 10px;margin: 12px; border-radius: 25px;">
         <h2>System Summary</h2>
         <p style ="color: darkblue; line-height: 1.5;">{{ summary }}</p>
     </div>
@@ -112,9 +153,13 @@
         <br> -->
 
         {% for sent in summ_sents %}
+            <label class="checkbox-label">
                 <input type="checkbox" name = "checkbox_{{loop.index}}" value = "{{sent}}"> {{sent}} </input>
                 <!-- <option value="{{ sent}}">{{ sent}}</option> -->
-                <br>
+            </label>
+            <br>
+
+            
         {% endfor %}
        
         <input name="username" value="{{username}}" type=hidden>

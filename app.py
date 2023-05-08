@@ -57,7 +57,26 @@ def get_users():
     users = {
     "sanjana": User(1, "sanjana", "zR46"),
     "byron": User(2, "byron", "fJ89"),
-    "kundan": User(3, "kundan", "8f*7")
+    "kundan": User(3, "kundan", "8f*7"),
+    "ann_fslj": User(4, "ann_fslj", "axdu"),
+    "ann_eqgt": User(5, "ann_eqgt", "depz"),
+    "ann_ybmo": User(6, "ann_ybmo", "vntp"),
+    "ann_dfey": User(7, "ann_dfey", "ymmr"),
+    "ann_xdjw": User(8, "ann_xdjw", "ghmf"),
+    "ann_rict": User(9, "ann_rict", "yyjx"),
+    "ann_liwk": User(10, "ann_liwk", "msxd"),
+    "ann_wqap": User(11, "ann_wqap", "wwiv"),
+    "ann_qbqn": User(12, "ann_qbqn", "cwun"),
+    "ann_zxyw": User(13, "ann_zxyw", "jclb"),
+    "ann_xkym": User(14, "ann_xkym", "lctu"),
+    "ann_aluf": User(15, "ann_aluf", "sykj"),
+    "ann_japq": User(16, "ann_japq", "bcxw"),
+    "ann_tpfo": User(17, "ann_tpfo", "ydvl"),
+    "ann_ghbn": User(18, "ann_ghbn", "ebvd"),
+    "ann_ohjd": User(19, "ann_ohjd", "pwhf"),
+    "ann_rjmd": User(20, "ann_rjmd", "fkil"),
+    "ann_fjfvtn": User(21, "ann_fjfvtn", "dwgo"),
+    "ann_vzxvqm": User(22, "ann_vzxvqm", "ttsh")
     }
     return users
 

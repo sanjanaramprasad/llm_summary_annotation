@@ -233,3 +233,7 @@ def save_annotation(uid):
         return annotate(uid)
     else:
         return back(uid)
+    
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=8080)

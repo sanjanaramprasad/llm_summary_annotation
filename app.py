@@ -10,8 +10,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import math
 import spacy
 nlp = spacy.load('en_core_web_sm')
+import flask_monitoringdashboard as dashboard
 
 app = Flask(__name__)
+dashboard.bind(app)
 app.secret_key = 'your_secret_key_here'
 
 

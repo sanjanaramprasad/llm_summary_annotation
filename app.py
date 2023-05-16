@@ -76,7 +76,13 @@ def get_users():
     "ann_ohjd": User(19, "ann_ohjd", "pwhf"),
     "ann_rjmd": User(20, "ann_rjmd", "fkil"),
     "ann_fjfvtn": User(21, "ann_fjfvtn", "dwgo"),
-    "ann_vzxvqm": User(22, "ann_vzxvqm", "ttsh")
+    "ann_vzxvqm": User(22, "ann_vzxvqm", "ttsh"),
+    "ann_wumbam" : User(22, "ann_wumbam", "plangb"),
+    "ann_dambmb" : User(22, "ann_dambmb", "ksmjrl"),
+    "ann_tajfrq" : User(22, "ann_tajfrq", "gkfimr"),
+    "ann_ecgvex" : User(22, "ann_ecgvex", "jmybgd"),
+    "ann_eayfvi" : User(22, "ann_eayfvi", "hynauj"),
+    "ann_lpagod" : User(22, "ann_lpagod", "lzwllo")
     }
     return users
 

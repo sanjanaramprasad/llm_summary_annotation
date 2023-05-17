@@ -19,7 +19,7 @@ app.secret_key = 'your_secret_key_here'
 
 
 directory = 'data'
-database_name = 'summaries_test.db'
+database_name = 'summaries_news_sample.db'
 db_path = '%s/%s'%(directory, database_name)
 n_labels_per_doc = 6
 n_docs = 5

@@ -221,7 +221,7 @@ def save_annotation(uid):
         username = str(request.form['username'])
         summ_id = str(request.form['summ_id'])
         system_id = str(request.form['system_id'])
-        label_type = "binary"
+        # label_type = "binary"
         summary = str(request.form['summary'])
         article = str(request.form['article'])
 

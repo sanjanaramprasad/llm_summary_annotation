@@ -227,7 +227,7 @@ def save_annotation(uid):
 
         with sqlite3.connect(db_path) as con:
             con.execute("""INSERT INTO label (user_id, summary_uuid, summ_id, system_id, label_type, summary, nonfactual_sentences, article) VALUES (?, ?, ?, ?, ?, ? ,?, ?);""",
-                                                            (username, uid, summ_id, system_id, label_type, summary, ','.join(checked_values), article))
+                                                            (username, uid, summ_id, system_id, label_type, summary, '<new_annotation>'.join(checked_values), article))
 
         
         return next()

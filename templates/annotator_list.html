@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Select annotator to review</title>
+</head>
+<body>
+  <form action="/show_annotations/{{annotators}}" method="POST">
+    {% for annot in annotators %}
+    <input type="radio" name="checked_{{annot}}" value="{{ annot }}">{{ annot }}<br>
+    {% endfor %}
+    <button type="submit", value = "submit">Submit</button>
+
+    
+  </form>
+</body>
+</html>

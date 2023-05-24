@@ -1,0 +1,141 @@
+<!doctype html>
+
+<head>
+    <style>
+
+        .container {
+			position: relative;
+			height: 100px;
+			background-color: #eee;
+		}
+
+		#black-button {
+			position: absolute;
+			left: 10px;
+			background-color: black;
+			color: white;
+			padding: 5px 20px;
+			border: none;
+			border-radius: 10px;
+			font-size: 16px;
+			font-weight: bold;
+			cursor: pointer;
+		}
+
+        #submit-button {
+			position: absolute;
+			right: 100px;
+			background-color: green;
+			color: white;
+			padding: 5px 20px;
+			border: none;
+			border-radius: 10px;
+			font-size: 16px;
+			font-weight: bold;
+			cursor: pointer;
+		}
+
+        #clear-button {
+			position: absolute;
+			left: 100px;
+			background-color: orange;
+			color: white;
+			padding: 5px 20px;
+			border: none;
+			border-radius: 10px;
+			font-size: 16px;
+			font-weight: bold;
+			cursor: pointer;
+		}
+    
+        
+		
+ 
+
+
+	</style>
+
+
+    <title>Annotation Dashboard</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      $(function() {
+        $(window).on('beforeunload', function() {
+          $.ajax({
+            url: '/logout',
+            type: 'POST',
+            async: false
+          });
+        });
+      });
+    </script>
+  </head>
+
+<title>Annotate</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<section class="content">
+  
+  
+  {% block content %}
+
+
+
+  <br/><br/>
+  <h1> Displaying annotations for {{user_id}}</h1>
+  <!-- <h1> Article </h1>  -->
+  <div style="width: 100%; overflow: hidden;">
+    <div id="article" style="width:45%; height:440px;float: left;overflow:auto;background-color: lightgrey;border: 15px lightgreyn;padding: 10px;margin: 12px; border-radius: 25px;">
+        <h1> Article </h1>
+        <p style ="color: darkblue; line-height: 1.5;"> {{ article }}</p>
+
+        <br/><br/>
+    </div>
+
+    <!-- border: 15px lightgreyn;padding: 10px;margin: 20px; border-radius: 15px; ">-->
+    <div id="system-summary" style="width:45%; height:440px;float: right; background-color: lightgoldenrodyellow;border: 15px lightgreyn;padding: 10px;margin: 12px; border-radius: 25px;">
+        <h2>System Summary</h2>
+        <p style ="color: darkblue; line-height: 1.5;">{{ summary }}</p>
+    </div>
+</div>
+
+<br/><br/>
+<hr>
+ <div id=".container">
+ 
+  <form action="/next_annotation/{{user_id}}" method="post">
+         Annotation id: {{summary_uuid}}
+
+        <h3> Factual Class </h3>
+        {{label_type}}
+
+        <h3> Annotated sentences</h3>
+      
+        {% for sent in nonfactual_sentence %}
+        <li>{{ sent }}</li>
+        {% endfor %}
+       
+        
+        <input name="user_annotations" value="{{user_annotations}}" type=hidden>
+        <input name="idx" value="{{idx}}" type=hidden>
+        <input name="user_id" value="{{user_id}}" type=hidden>
+        <input name="summary_uuid" value="{{summary_uuid}}" type=hidden>
+        <input name="label_type" value="{{label_type}}" type=hidden>
+        <input name="summary" value="{{summary}}" type=hidden>
+        <input name="article" value="{{article}}" type=hidden>
+        <br>
+            
+</div>
+
+
+<button id="clear-button" name = "button" value = "back">Back</button>
+<button id="submit-button" name = "button" value = "next"> Next</button>
+<button id="black-button" name = "button" value = "index">Index</button>
+
+
+
+
+  {% endblock %}
+</form>
+</div>
+
+</section>

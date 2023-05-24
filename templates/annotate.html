@@ -135,7 +135,7 @@
 <hr>
  <div id=".container">
  
-  <form action="/save_annotation/{{summ_uuid}}" method="post">
+  <form action="/save_annotation" method="post">
 
  
         <h3> Select the sentences below (from the summary) that are not supported by the source article. Otherwise leave them blank</h3>
@@ -163,6 +163,7 @@
         {% endfor %}
        
         <input name="username" value="{{username}}" type=hidden>
+        <input name="summ_uuid" value="{{summ_uuid}}" type=hidden>
         <input name="summ_id" value="{{summ_id}}" type=hidden>
         <input name="system_id" value="{{system_id}}" type=hidden>
         <input name="summary" value="{{summary}}" type=hidden>

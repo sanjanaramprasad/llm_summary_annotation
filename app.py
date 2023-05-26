@@ -4,7 +4,8 @@ from flask import Flask, jsonify, request, render_template, url_for, redirect, s
 import json 
 
 import sqlalchemy
-from sqlalchemy import text, create_engine, Index, MetaData, Table
+from sqlalchemy import text, create_engine, Index, MetaData, Table, select, exists
+from sqlalchemy.sql import and_
 
 from random import shuffle
 from flask import Flask, render_template, redirect, url_for, request
@@ -26,16 +27,19 @@ app.secret_key = 'your_secret_key_here'
 directory = '/home/ec2-user/llm_summary_annotation/data'
 database_name = 'summaries_news_sample.db'
 db_path = '/%s/%s'%(directory, database_name)
-db_engine = dbEngine=sqlalchemy.create_engine('sqlite:////home/ec2-user/llm_summary_annotation/data/summaries_news_sample_qual.db')
+db_engine = dbEngine=sqlalchemy.create_engine('sqlite:////home/ec2-user/llm_summary_annotation/data/summaries_news_sample.db')
+
 metadata = MetaData(bind=db_engine)
 metadata.reflect()
 print(metadata)
 generated_summaries = metadata.tables['generated_summaries']
 label = metadata.tables['label']
-index1 = Index('idx_generated_summaries', generated_summaries.c.summary_uuid)
-index2 = Index('idx_label', label.c.summary_uuid)
-index1.create(bind=db_engine)
-index2.create(bind=db_engine)
+# index1 = Index('idx_generated_summaries', generated_summaries.c.summary_uuid)
+# index2 = Index('idx_label', label.c.summary_uuid)
+# index1.create(bind=db_engine)
+# index2.create(bind=db_engine)
+
+# con = db_engine.connect()
 
 n_labels_per_doc = 6
 n_docs = 5
@@ -155,9 +159,12 @@ def logout():
 def get_summary_article_for_uid(summary_uuid) -> Tuple[str]:
     # return (target, title, predicted) summary for this *prediction* uid.
     with dbEngine.connect() as con:
-        sql_query = text("""SELECT article, summary, summary_uuid, summ_id, system_id FROM generated_summaries where summary_uuid='{}';""".format(summary_uuid))
-        article, summary, summ_uuid, summ_id, system_id = con.execute(sql_query).fetchone()
-        return article, summary, summ_uuid, summ_id, system_id
+        # sql_query = text("""SELECT article, summary, summary_uuid, summ_id, system_id FROM generated_summaries where summary_uuid='{}';""".format(summary_uuid))
+        stmt = select([generated_summaries.c.article, generated_summaries.c.summary, generated_summaries.c.summary_uuid, \
+                      generated_summaries.c.summ_id, generated_summaries.c.system_id]).where(generated_summaries.c.summary_uuid == summary_uuid)
+        
+        article, summary, summ_uuid, summ_id, system_id = con.execute(stmt).fetchone()
+    return article, summary, summ_uuid, summ_id, system_id
 
 @login_required
 @app.route('/annotate/<uid>')
@@ -175,38 +182,39 @@ def annotate(summary_uuid):
 
 @login_required
 def back(current_uuid):
-    with dbEngine.connect() as con:
+        with dbEngine.connect() as con:
         
         # print(con.execute("SELECT * FROM label").fetchall())
-        username = current_user.username
-        sql_query = text(f"""SELECT summary_uuid FROM label WHERE label.user_id = '{username}' ORDER BY summary_uuid;""")
-        # q_str = f"""SELECT summary_uuid FROM label WHERE label.user_id = '{username}' ORDER BY summary_uuid;"""
-        uuids = con.execute(sql_query).fetchall()
-        uuids = [each[0] for each in uuids]
-        print('ALL LABELED', uuids)
-        if current_uuid in uuids:
-            current_uuid_idx = uuids.index(current_uuid)
-            back_uuid = uuids[current_uuid_idx - 1]
-        elif uuids:
-            back_uuid =  uuids[-1]
-        else:
-            back_uuid = current_uuid
-        # summary_uuid = con.execute("""SELECT summary_uuid FROM generated_summaries where uuid='{}';""".format(back_uuid)).fetchone()
-        print(back_uuid)
-        return annotate(back_uuid)
+            username = current_user.username
+            # sql_query = text(f"""SELECT summary_uuid FROM label WHERE label.user_id = '{username}' ORDER BY summary_uuid;""")
+            stmt = select(label.c.summary_uuid).where(label.c.user_id == username).order_by(label.c.summary_uuid)
+            uuids = con.execute(stmt).fetchall()
+            uuids = [each[0] for each in uuids]
+            print('ALL LABELED', uuids)
+            if current_uuid in uuids:
+                current_uuid_idx = uuids.index(current_uuid)
+                back_uuid = uuids[current_uuid_idx - 1]
+            elif uuids:
+                back_uuid =  uuids[-1]
+            else:
+                back_uuid = current_uuid
+            # summary_uuid = con.execute("""SELECT summary_uuid FROM generated_summaries where uuid='{}';""".format(back_uuid)).fetchone()
+            print(back_uuid)
+            return annotate(back_uuid)
 
 @login_required
 def next():
-    ''' pick a rando prediction in the system that hasn't been annotated, display it. '''
-    with dbEngine.connect() as con:
         username = current_user.username
         # print(con.execute("SELECT * FROM label").fetchall())
-        q_str = text(f"""SELECT summary_uuid FROM generated_summaries WHERE NOT EXISTS (
-                    SELECT * FROM label WHERE generated_summaries.summary_uuid = label.summary_uuid AND label.user_id = '{username}' ) 
-                      ORDER BY summary_uuid, RANDOM() LIMIT 1;""")
-
-
-        summary_uuid = con.execute(q_str).fetchone()
+        
+        # q_str = text(f"""SELECT summary_uuid FROM generated_summaries WHERE NOT EXISTS (
+        #             SELECT * FROM label WHERE generated_summaries.summary_uuid = label.summary_uuid AND label.user_id = '{username}' ) 
+        #               ORDER BY summary_uuid, RANDOM() LIMIT 1;""")
+        # subquery = select([label]).where(and_(generated_summaries.c.summary_uuid == label.c.summary_uuid, label.c.user_id == username))
+        # stmt = select(generated_summaries.c.summary_uuid).where(~exists(subquery)).order_by(generated_summaries.c.summary_uuid).limit(1)
+        with dbEngine.connect() as con:
+            stmt = select(generated_summaries.c.summary_uuid).limit(1)
+            summary_uuid = con.execute(stmt).fetchone()
 
         if summary_uuid is None:
             return render_template("all_done.html")
@@ -245,17 +253,18 @@ def save_annotation():
         article = str(request.form['article'])
 
         with dbEngine.connect() as con:
+            
             q_str = """INSERT INTO label (user_id, summary_uuid, summ_id, system_id, label_type, summary, nonfactual_sentences, article) VALUES (:value1, :value2, :value3, :value4, :value5, :value6, :value7, :value8)"""
             values = {'value1': username, 
-                      'value2': uid, 
-                      'value3': summ_id, 
-                      'value4': system_id, 
-                      'value5': label_type, 
-                      'value6': summary, 
-                      'value7': '<new_annotation>'.join(checked_values), 
-                      'value8': article}
+                          'value2': uid, 
+                          'value3': summ_id, 
+                          'value4': system_id, 
+                          'value5': label_type, 
+                          'value6': summary, 
+                          'value7': '<new_annotation>'.join(checked_values), 
+                          'value8': article}
             con.execute(q_str, **values)
-            # con.commit()
+        # con.commit()
 
         
         return next()

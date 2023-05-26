@@ -2,25 +2,39 @@ from typing import Dict, Tuple, Sequence
 
 from flask import Flask, jsonify, request, render_template, url_for, redirect, send_from_directory
 import json 
-import sqlite3
+
+import sqlalchemy
+from sqlalchemy import text, create_engine, Index, MetaData, Table
+
 from random import shuffle
 from flask import Flask, render_template, redirect, url_for, request
 from flask_login import LoginManager, login_user, current_user, login_required, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 import math
 import spacy
+
 nlp = spacy.load('en_core_web_sm')
-import flask_monitoringdashboard as dashboard
+# import flask_monitoringdashboard as dashboard
 
 app = Flask(__name__)
-dashboard.bind(app)
+# dashboard.bind(app)
 app.secret_key = 'your_secret_key_here'
 
 
 
-directory = 'data'
+
+directory = '/Users/sanjana/llm_summary_annotation/data'
 database_name = 'summaries_news_sample.db'
-db_path = '%s/%s'%(directory, database_name)
+db_path = '/%s/%s'%(directory, database_name)
+db_engine = dbEngine=sqlalchemy.create_engine('sqlite:////Users/sanjana/llm_summary_annotation/data/summaries_news_sample_qual.db')
+metadata = MetaData(bind=db_engine)
+metadata.reflect()
+generated_summaries = metadata.tables['generated_summaries']
+label = metadata.tables['label']
+index1 = Index('idx_generated_summaries', generated_summaries.c.summary_uuid)
+index2 = Index('idx_label', label.c.summary_uuid)
+
+
 n_labels_per_doc = 6
 n_docs = 5
 
@@ -138,8 +152,9 @@ def logout():
 
 def get_summary_article_for_uid(summary_uuid) -> Tuple[str]:
     # return (target, title, predicted) summary for this *prediction* uid.
-    with sqlite3.connect(db_path) as con:
-        article, summary, summ_uuid, summ_id, system_id = con.execute("""SELECT article, summary, summary_uuid, summ_id, system_id FROM generated_summaries where summary_uuid='{}';""".format(summary_uuid)).fetchone()
+    with dbEngine.connect() as con:
+        sql_query = text("""SELECT article, summary, summary_uuid, summ_id, system_id FROM generated_summaries where summary_uuid='{}';""".format(summary_uuid))
+        article, summary, summ_uuid, summ_id, system_id = con.execute(sql_query).fetchone()
         return article, summary, summ_uuid, summ_id, system_id
 
 @login_required
@@ -158,12 +173,13 @@ def annotate(summary_uuid):
 
 @login_required
 def back(current_uuid):
-    with sqlite3.connect(db_path) as con:
+    with dbEngine.connect() as con:
         
         # print(con.execute("SELECT * FROM label").fetchall())
         username = current_user.username
-        q_str = f"""SELECT summary_uuid FROM label WHERE label.user_id = '{username}' ORDER BY summary_uuid;"""
-        uuids = con.execute(q_str).fetchall()
+        sql_query = text(f"""SELECT summary_uuid FROM label WHERE label.user_id = '{username}' ORDER BY summary_uuid;""")
+        # q_str = f"""SELECT summary_uuid FROM label WHERE label.user_id = '{username}' ORDER BY summary_uuid;"""
+        uuids = con.execute(sql_query).fetchall()
         uuids = [each[0] for each in uuids]
         print('ALL LABELED', uuids)
         if current_uuid in uuids:
@@ -180,12 +196,12 @@ def back(current_uuid):
 @login_required
 def next():
     ''' pick a rando prediction in the system that hasn't been annotated, display it. '''
-    with sqlite3.connect(db_path) as con:
+    with dbEngine.connect() as con:
         username = current_user.username
         # print(con.execute("SELECT * FROM label").fetchall())
-        q_str = f"""SELECT summary_uuid FROM generated_summaries WHERE NOT EXISTS (
+        q_str = text(f"""SELECT summary_uuid FROM generated_summaries WHERE NOT EXISTS (
                     SELECT * FROM label WHERE generated_summaries.summary_uuid = label.summary_uuid AND label.user_id = '{username}' ) 
-                      ORDER BY summary_uuid, RANDOM() LIMIT 1;"""
+                      ORDER BY summary_uuid, RANDOM() LIMIT 1;""")
 
 
         summary_uuid = con.execute(q_str).fetchone()
@@ -226,9 +242,18 @@ def save_annotation():
         summary = str(request.form['summary'])
         article = str(request.form['article'])
 
-        with sqlite3.connect(db_path) as con:
-            con.execute("""INSERT INTO label (user_id, summary_uuid, summ_id, system_id, label_type, summary, nonfactual_sentences, article) VALUES (?, ?, ?, ?, ?, ? ,?, ?);""",
-                                                            (username, uid, summ_id, system_id, label_type, summary, '<new_annotation>'.join(checked_values), article))
+        with dbEngine.connect() as con:
+            q_str = """INSERT INTO label (user_id, summary_uuid, summ_id, system_id, label_type, summary, nonfactual_sentences, article) VALUES (:value1, :value2, :value3, :value4, :value5, :value6, :value7, :value8)"""
+            values = {'value1': username, 
+                      'value2': uid, 
+                      'value3': summ_id, 
+                      'value4': system_id, 
+                      'value5': label_type, 
+                      'value6': summary, 
+                      'value7': '<new_annotation>'.join(checked_values), 
+                      'value8': article}
+            con.execute(q_str, **values)
+            # con.commit()
 
         
         return next()

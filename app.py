@@ -23,17 +23,19 @@ app.secret_key = 'your_secret_key_here'
 
 
 
-directory = '/Users/sanjana/llm_summary_annotation/data'
+directory = '/home/ec2-user/llm_summary_annotation/data'
 database_name = 'summaries_news_sample.db'
 db_path = '/%s/%s'%(directory, database_name)
-db_engine = dbEngine=sqlalchemy.create_engine('sqlite:////Users/sanjana/llm_summary_annotation/data/summaries_news_sample_qual.db')
+db_engine = dbEngine=sqlalchemy.create_engine('sqlite:////home/ec2-user/llm_summary_annotation/data/summaries_news_sample_qual.db')
 metadata = MetaData(bind=db_engine)
 metadata.reflect()
+print(metadata)
 generated_summaries = metadata.tables['generated_summaries']
 label = metadata.tables['label']
 index1 = Index('idx_generated_summaries', generated_summaries.c.summary_uuid)
 index2 = Index('idx_label', label.c.summary_uuid)
-
+index1.create(bind=db_engine)
+index2.create(bind=db_engine)
 
 n_labels_per_doc = 6
 n_docs = 5

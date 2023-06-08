@@ -1,0 +1,188 @@
+<!doctype html>
+
+<head>
+    <style>
+
+        .container {
+			position: relative;
+			height: 100px;
+			background-color: #eee;
+		}
+
+		#black-button {
+			position: absolute;
+			left: 10px;
+			background-color: black;
+			color: white;
+			padding: 5px 20px;
+			border: none;
+			border-radius: 10px;
+			font-size: 16px;
+			font-weight: bold;
+			cursor: pointer;
+		}
+
+        #submit-button {
+			position: absolute;
+			right: 100px;
+			background-color: green;
+			color: white;
+			padding: 5px 20px;
+			border: none;
+			border-radius: 10px;
+			font-size: 16px;
+			font-weight: bold;
+			cursor: pointer;
+		}
+
+        #clear-button {
+			position: absolute;
+			left: 100px;
+			background-color: orange;
+			color: white;
+			padding: 5px 20px;
+			border: none;
+			border-radius: 10px;
+			font-size: 16px;
+			font-weight: bold;
+			cursor: pointer;
+		}
+    
+        
+		input[type="checkbox"]{
+            -webkit-appearance: initial;
+            appearance: initial;
+            background: gray;
+            width: 13px;
+            height: 13px;
+            border: 2px solid black;;
+            position: relative;
+        }
+        input[type="checkbox"]:checked {
+            background: red;
+        }
+        input[type="checkbox"]:checked:after {
+            /* Heres your symbol replacement */
+            content: "X";
+            color: #fff;
+            /* The following positions my tick in the center, 
+            * but you could just overlay the entire box
+            * with a full after element with a background if you want to */
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            -webkit-transform: translate(-50%,-50%);
+            -moz-transform: translate(-50%,-50%);
+            -ms-transform: translate(-50%,-50%);
+            transform: translate(-50%,-50%);
+            /*
+            * If you want to fully change the check appearance, use the following:
+            * content: " ";
+            * width: 100%;
+            * height: 100%;
+            * background: blue;
+            * top: 0;
+            * left: 0;
+            */
+        }
+ 
+
+
+	</style>
+
+    <title>Annotation Dashboard</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      $(function() {
+        $(window).on('beforeunload', function() {
+          $.ajax({
+            url: '/logout',
+            type: 'POST',
+            async: false
+          });
+        });
+      });
+    </script>
+  </head>
+
+<title>Annotate</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<section class="content">
+  
+  
+  {% block content %}
+
+
+
+  <br/><br/>
+  <!-- <h1> Article </h1>  -->
+  <div style="width: 100%; overflow: hidden;">
+    <div id="article" style="width:45%; height:440px;float: left;overflow:auto;background-color: lightgrey;border: 15px lightgreyn;padding: 10px;margin: 12px; border-radius: 25px;">
+        <h1> Article </h1>
+        <p style ="color: darkblue; line-height: 1.5;"> {{ article }}</p>
+
+        <br/><br/>
+    </div>
+
+    <!-- border: 15px lightgreyn;padding: 10px;margin: 20px; border-radius: 15px; ">-->
+    <div id="system-summary" style="width:45%; height:440px;float: right; background-color: lightgoldenrodyellow;border: 15px lightgreyn;padding: 10px;margin: 12px; border-radius: 25px;">
+        <h2>System Summary</h2>
+        <p style ="color: darkblue; line-height: 1.5;">{{ summary }}</p>
+    </div>
+</div>
+<h3 style="color:black"> Non factual sentence identified </h3>
+    <h4 style="color:red"> {{nonfactual_sentence}}</h4>
+<br/>
+<hr>
+ <div id=".container">
+
+  
+  <form action="/save_annotation" method="post">
+
+ 
+        <h3> Above is a sentence from the summary marked as inconsistent. Answer the following questions with respect to the inconsistent sentence</h3>
+        
+        
+        <h4> 1) What is the best category to identify the severity of error</h4>
+
+        <input type="radio" name = "severity" value = "minor" required> Minor inconsistencies (relatively minor errors that do not significantly affect the overall understanding or interpretation of the summary 
+        ) </input> <br>
+        <input type="radio" name = "severity" value = "major" required> Major inconsistencies (substantial inconsistencies that have a noticeable impact on accuracy or interpretation of summary)  </input> <br>
+        
+        <h4> 2) Mark the box that best identifies the type of error in the sentence </h4>
+        <input type="radio" name = "error_type" value = "intrinsic"> Terms or concepts from the source are misrepresented </input> <br>
+
+        (Note: The following are for cases when the summary includes content that is not found in the source and cannot be inferred) <br>
+        <input type="radio" name = "error_type" value = "extrinsic_factual" required> The information in the summary not found in the source can be verified via an internet search as accurate  </input> <br>
+        <input type="radio" name = "error_type" value = "extrinsic_factual_outdated" required> The information in the summary not found in the source  can be verified via an internet search as being accurate at a previous time but is outdated  </input> <br>
+        <input type="radio" name = "error_type" value = "extrinsic_nonfactual" required> The information in the summary not found in the source  can not be verified via an internet search </input> <br>
+        <input type="radio" name = "error_type" value = "other" required> Other (ensure to leave a short comment) </input> <br><br>
+       
+        Leave a comment if marked other, else optional <br>
+        <input type = "text" name="comments" placeholder="comment box (optional unless marked other above)">
+
+        <input name="username" value="{{username}}" type=hidden>
+        <input name="summ_uuid" value="{{summ_uuid}}" type=hidden>
+        <input name="summ_id" value="{{summ_id}}" type=hidden>
+        <input name="system_id" value="{{system_id}}" type=hidden>
+        <input name="nonfactual_sentence" value="{{nonfactual_sentence}}" type=hidden>
+        <input name="summary" value="{{summary}}" type=hidden>
+        <input name="article" value="{{article}}" type=hidden>
+        
+        <br>
+        <br>
+            
+</div>
+
+<button id="clear-button" name = "button" value = "clear">Clear</button>
+<button id="submit-button" name = "button" value = "submit"> Submit</button>
+<button id="black-button" name = "button" value = "back">Back</button>
+
+
+
+
+  {% endblock %}
+</form>
+</div>
+
+</section>

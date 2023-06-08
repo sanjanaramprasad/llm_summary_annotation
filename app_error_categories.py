@@ -26,8 +26,8 @@ application.secret_key = 'your_secret_key_here'
 
 
 
-directory = '/Users/sanjana/human_annotations_factuality/XSUM_CNN/set1_round2'
-database_name = 'news_nonfactual_annotated_generated_summaries.db'
+directory = '/Users/sanjana/human_annotations_factuality/billsum/set1_round2'
+database_name = 'billsum_nonfactual_annotated_generated_summaries.db'
 db_path = '/%s/%s'%(directory, database_name)
 dbEngine=sqlalchemy.create_engine('sqlite:///' + db_path)
 
@@ -80,11 +80,8 @@ class User:
 
 def get_users():
     users = {
-    "sanjana": User(1, "sanjana", "zR46"),
-    "byron": User(2, "byron", "fJ89"),
-    "kundan": User(3, "kundan", "8f*7"),
-    "ann_japq": User(4, "ann_japq", "bcxw"),
-    "ann_tpfo": User(5, "ann_tpfo", "ydvl"),
+    "ann_hguilf": User(4, "ann_hguilf", "sgnvru"),
+    "ann_pvrkuy": User(5, "ann_pvrkuy", "rsjapi"),
     }
     return users
 
@@ -153,11 +150,49 @@ def get_summary_article_for_uid(summary_uuid, username) -> Tuple[str]:
 def annotate(summary_uuid, username):
     # uid is a unique identifier for a *generated*
     # summary. 
+    severity_map = {'minor': 'Minor inconsistencies', "major": "Major inconsistencies"}
+    error_type_map = {'intrinsic': "Terms or concepts from the source are misrepresented",
+                      "extrinsic_factual": "The information in the summary is not found in the source but can be verified via an internet search as accurate",
+                      "extrinsic_factual_outdated": "The information in the summary is not found in the source and can be verified via an internet search as being accurate at a previous time but is outdated",
+                      "extrinsic_nonfactual": "The information in the summary is not found in the source and can not be verified via an internet search",
+                      "other": "Other"}
+    inaccuracy_severity = None 
+    error_category = None 
+    comments = None 
+
     username = current_user.username
     article, summary, nonfactual_sentence, summ_uuid, summ_id, system_id = get_summary_article_for_uid(summary_uuid, username)
     summ_sents = list(nlp(summary).sents)
 
-    return render_template("annotate_categories.html", username = username, article= article, summary = summary, nonfactual_sentence = nonfactual_sentence,  summ_uuid = summ_uuid, summ_id = summ_id, system_id = system_id)
+    ### check if already annotated and if it is, display it 
+    stmt_previous_labels = select([error_label.c.inaccuracy_severity, error_label.c.error_type, error_label.c.error_factuality, error_label.c.comments]).where(and_(error_label.c.user_id == username, error_label.c.summary_uuid == summary_uuid))
+    with dbEngine.connect() as con:
+            results = con.execute(stmt_previous_labels).fetchall()
+    if results:
+        print(results)
+        previous_label = results[-1]
+        inaccuracy_severity = previous_label[0]
+        inaccuracy_severity = severity_map[inaccuracy_severity]
+        
+        error_type = previous_label[1]
+        error_factuality = previous_label[2]
+        error_category = f'{error_type}_{error_factuality}' if error_factuality  else error_type
+        error_category = error_type_map[error_category]
+        
+        comments = previous_label[3]
+
+    
+
+    return render_template("annotate_categories.html", username = username, 
+                        article= article, 
+                        summary = summary, 
+                        nonfactual_sentence = nonfactual_sentence,  
+                        summ_uuid = summ_uuid, 
+                        summ_id = summ_id, 
+                        system_id = system_id,
+                        inaccuracy_severity = inaccuracy_severity,
+                        error_category = error_category,
+                        comments = comments)
 
 @login_required
 def back(current_uuid):
@@ -212,6 +247,12 @@ def save_annotation():
     system_id = str(request.form['system_id'])
     
     button_val = str(request.form['button'])
+
+    if button_val == 'next':
+        inaccuracy_severity_previous = str(request.form['inaccuracy_severity_previous'])
+        error_type_category_previous = str(request.form['error_category_previous'])
+        if inaccuracy_severity_previous and error_type_category_previous:
+            return next()
     
     if button_val == 'submit':
         inaccuracy_severity = str(request.form['severity'])

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <style>
+        .container {
+			position: relative;
+			height: 100px;
+			background-color: #eee;
+		}
+
+		#black-button {
+			position: absolute;
+			left: 10px;
+			background-color: black;
+			color: white;
+			padding: 5px 20px;
+			border: none;
+			border-radius: 10px;
+			font-size: 16px;
+			font-weight: bold;
+			cursor: pointer;
+		}
+
+        #submit-button {
+			position: absolute;
+			right: 100px;
+			background-color: green;
+			color: white;
+			padding: 5px 20px;
+			border: none;
+			border-radius: 10px;
+			font-size: 16px;
+			font-weight: bold;
+			cursor: pointer;
+		}
+
+        #clear-button {
+			position: absolute;
+			left: 100px;
+			background-color: orange;
+			color: white;
+			padding: 5px 20px;
+			border: none;
+			border-radius: 10px;
+			font-size: 16px;
+			font-weight: bold;
+			cursor: pointer;
+		}
+    
+        
+		input[type="checkbox"]{
+            -webkit-appearance: initial;
+            appearance: initial;
+            background: gray;
+            width: 13px;
+            height: 13px;
+            border: 2px solid black;;
+            position: relative;
+        }
+        input[type="checkbox"]:checked {
+            background: red;
+        }
+        input[type="checkbox"]:checked:after {
+            /* Heres your symbol replacement */
+            content: "X";
+            color: #fff;
+            /* The following positions my tick in the center, 
+            * but you could just overlay the entire box
+            * with a full after element with a background if you want to */
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            -webkit-transform: translate(-50%,-50%);
+            -moz-transform: translate(-50%,-50%);
+            -ms-transform: translate(-50%,-50%);
+            transform: translate(-50%,-50%);
+            /*
+            * If you want to fully change the check appearance, use the following:
+            * content: " ";
+            * width: 100%;
+            * height: 100%;
+            * background: blue;
+            * top: 0;
+            * left: 0;
+            */
+        }
+
+        .selected {
+            background-color: yellow;
+            position: relative;
+        }
+
+
+        .selected::after {
+            content: attr(data-type);
+            position: absolute;
+            top: -1.2em;
+            right: 0;
+            font-size: 0.7em;
+            background-color: #4d4dff;
+            padding: 0.1em 0.3em;
+            border-radius: 0.2em;
+        }
+
+        .speaker_a {
+            position: relative;
+            display: flex;
+            background-color: #007bff; /* Background color of the bubble */
+            color: #fff; /* Text color inside the bubble */
+            padding: 1em; 
+            border-radius: 10px;
+            line-height: 1;
+            margin: 0.01em 10; 
+            float: left;
+        }
+        .speaker_b {
+            position: relative;
+            display: flex;
+            background-color: green; /* Background color of the bubble */
+            color: #fff; /* Text color inside the bubble */
+            padding: 1em; 
+            border-radius: 10px;
+            line-height: 1;
+            margin: 0.01em 10; 
+            float: left;
+        }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <!-- <h1>Named Entity Annotation</h1>
+
+    <div>
+        <p>
+            Text: <span id="text">The quick brown fox jumps over the lazy dog.</span>
+        </p>
+    </div> -->
+
+    <div id="dialogue" style="width:45%; height:440px;float: left;overflow:auto;background-color: lightgrey;border: 15px lightgreyn;padding: 10px;margin: 12px; border-radius: 25px;white-space: pre-wrap;">
+        <h1> Dialogue </h1>
+        <div id = "dlg">
+                {% for chunk in dialogue %}
+                    {% if chunk[0] == '#Person1#' %}
+                        <div class="speaker_a">{{chunk[0]}} : {{ chunk[1] }}</div>
+                    {% else %}
+                        <div class="speaker_b">{{chunk[0]}} : {{ chunk[1] }}</div>
+                    {% endif %}
+                {% endfor %}
+        
+        </div>
+        
+
+        <br/><br/>
+    </div>
+
+    
+    <div id="system-summary" style="width:45%; height:440px;float: right; background-color: lightgrey;border: 15px lightgreyn;padding: 10px;margin: 12px; border-radius: 25px;">
+        <h2>System Summary</h2>
+        <!-- <p > -->
+            <span id = "summ" style ="color: darkblue; line-height: 1.5;"> {{ summary }} </span>
+        <!-- </p> -->
+    </div>
+ 
+    <div>
+        
+        <select id="entity-type-select">
+            <option value="">Select error evidence span</option>
+            <option value="Error_Evidence1">Error_Evidence1</option>
+            <option value="Error_Evidence2">Error_Evidence2</option>
+            <option value="Error_Evidence3">Error_Evidence3</option>
+            <option value="NONE">NONE</option>
+        </select>
+    </div>
+
+    <div id="annotation-area">
+        <h3>Annotated Spans:</h3>
+        <div id="annotations"></div>
+    </div>
+
+    <button id="submit-btn">Submit</button>
+
+    <script>
+        
+        $(document).ready(function() {
+            var annotations_summ = [];
+            var annotations_dlg = [];
+
+            function updateAnnotationsDlg() {
+                var text = $('#dlg').html();
+                var annotationsHtml = text;
+                for (var i = 0; i < annotations_dlg.length; i++) {
+                    var annotation = annotations_dlg[i];
+                    var start = annotationsHtml.indexOf(annotation.text.trim());
+                    if (start !== -1) {
+                        var end = start + annotation.text.length;
+                        var superscript = '<sup>' + annotation.type + '</sup>'
+                        var annotatedSpan = '<span class="selected" data-type="' + annotation.type + '">' + annotationsHtml.substring(start, end) +'</span>';
+                        annotationsHtml = annotationsHtml.substring(0, start) + annotatedSpan + annotationsHtml.substring(end);
+                        alert(annotationsHtml);
+                        
+                    }
+                }
+                $('#dlg').html(annotationsHtml);
+            }
+
+            function updateAnnotationsSumm() {
+                var text = $('#summ').html();
+                var annotationsHtml = text;
+                for (var i = 0; i < annotations_summ.length; i++) {
+                    var annotation = annotations_summ[i];
+                    var start = annotationsHtml.indexOf(annotation.text.trim());
+                    if (start !== -1) {
+                        var end = start + annotation.text.length;
+                        var superscript = '<sup>' + annotation.type + '</sup>'
+                        var annotatedSpan = '<span class="selected" data-type="' + annotation.type + '">' + annotationsHtml.substring(start, end) +'</span>';
+                        annotationsHtml = annotationsHtml.substring(0, start) + annotatedSpan + annotationsHtml.substring(end);
+                        alert(annotationsHtml);
+                        
+                    }
+                }
+                $('#summ').html(annotationsHtml);
+            }
+
+            function removeAnnotationSumm(selectedText) {
+                annotations_summ = annotations_summ.filter(function(annotation) {
+                    return annotation.text !== selectedText;
+                });
+                updateAnnotationsSumm();
+            }
+
+            function removeAnnotationDlg(selectedText) {
+                annotations_dlg = annotations_dlg.filter(function(annotation) {
+                    return annotation.text !== selectedText;
+                });
+                updateAnnotationsDlg();
+            }
+
+
+            $('#summ').mouseup(function() {
+                var selectedText = window.getSelection().toString();
+                if (selectedText !== '') {
+                    var entityType = $('#entity-type-select').val();
+                    if (entityType === 'NONE') {
+                        removeAnnotationSumm(selectedText);
+                    } else if (entityType !== '') {
+                        var annotation = {
+                            text: selectedText,
+                            type: entityType
+                        };
+                        annotations_summ.push(annotation);
+                        updateAnnotationsSumm();
+                    }
+                }
+            });
+
+            $('#dlg').mouseup(function() {
+                var selectedText = window.getSelection().toString();
+                if (selectedText !== '') {
+                    var entityType = $('#entity-type-select').val();
+                    if (entityType === 'NONE') {
+                        removeAnnotationDlg(selectedText);
+                    } else if (entityType !== '') {
+                        var annotation = {
+                            text: selectedText,
+                            type: entityType
+                        };
+                        annotations_dlg.push(annotation);
+                        updateAnnotationsDlg();
+                    }
+                }
+            });
+
+            $('#clear-button').click(function() {
+                annotations_summ = [];
+                updateAnnotationsSumm();
+            });
+
+            $('#submit-btn').click(function() {
+                $.ajax({
+                    type: 'POST',
+                    url: '/',
+                    data: {annotations_summ: annotations_summ},
+                    success: function(response) {
+                        console.log(response);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(xhr.responseText);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

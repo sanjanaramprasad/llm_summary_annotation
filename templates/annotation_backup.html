@@ -1,0 +1,186 @@
+<!doctype html>
+
+<head>
+    <style>
+
+        .container {
+			position: relative;
+			height: 100px;
+			background-color: #eee;
+		}
+
+		#black-button {
+			position: absolute;
+			left: 10px;
+			background-color: black;
+			color: white;
+			padding: 5px 20px;
+			border: none;
+			border-radius: 10px;
+			font-size: 16px;
+			font-weight: bold;
+			cursor: pointer;
+		}
+
+        #submit-button {
+			position: absolute;
+			right: 100px;
+			background-color: green;
+			color: white;
+			padding: 5px 20px;
+			border: none;
+			border-radius: 10px;
+			font-size: 16px;
+			font-weight: bold;
+			cursor: pointer;
+		}
+
+        #clear-button {
+			position: absolute;
+			left: 100px;
+			background-color: orange;
+			color: white;
+			padding: 5px 20px;
+			border: none;
+			border-radius: 10px;
+			font-size: 16px;
+			font-weight: bold;
+			cursor: pointer;
+		}
+    
+        
+		input[type="checkbox"]{
+            -webkit-appearance: initial;
+            appearance: initial;
+            background: gray;
+            width: 13px;
+            height: 13px;
+            border: 2px solid black;;
+            position: relative;
+        }
+        input[type="checkbox"]:checked {
+            background: red;
+        }
+        input[type="checkbox"]:checked:after {
+            /* Heres your symbol replacement */
+            content: "X";
+            color: #fff;
+            /* The following positions my tick in the center, 
+            * but you could just overlay the entire box
+            * with a full after element with a background if you want to */
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            -webkit-transform: translate(-50%,-50%);
+            -moz-transform: translate(-50%,-50%);
+            -ms-transform: translate(-50%,-50%);
+            transform: translate(-50%,-50%);
+            /*
+            * If you want to fully change the check appearance, use the following:
+            * content: " ";
+            * width: 100%;
+            * height: 100%;
+            * background: blue;
+            * top: 0;
+            * left: 0;
+            */
+        }
+ 
+
+
+	</style>
+
+    <title>Annotation Dashboard</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      $(function() {
+        $(window).on('beforeunload', function() {
+          $.ajax({
+            url: '/logout',
+            type: 'POST',
+            async: false
+          });
+        });
+      });
+    </script>
+  </head>
+
+<title>Annotate</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<section class="content">
+  
+  
+  {% block content %}
+
+
+
+  <br/><br/>
+  <!-- <h1> Article </h1>  -->
+  <div style="width: 100%; overflow: hidden;">
+    <div id="dialogue" style="width:45%; height:440px;float: left;overflow:auto;background-color: lightgrey;border: 15px lightgreyn;padding: 10px;margin: 12px; border-radius: 25px;white-space: pre-wrap;">
+        <h1> Dialogue </h1>
+        <p style ="color: darkblue; line-height: 1.5;"> {{ dialogue }}</p>
+
+        <br/><br/>
+    </div>
+
+    <!-- border: 15px lightgreyn;padding: 10px;margin: 20px; border-radius: 15px; ">-->
+    <div id="system-summary" style="width:45%; height:440px;float: right; background-color: lightgoldenrodyellow;border: 15px lightgreyn;padding: 10px;margin: 12px; border-radius: 25px;">
+        <h2>System Summary</h2>
+        <p style ="color: darkblue; line-height: 1.5;">{{ summary }}</p>
+    </div>
+</div>
+
+<br/><br/>
+<hr>
+ <div id=".container">
+ 
+  <form action="/save_annotation" method="post">
+
+ 
+        <h3> Select the sentences below (from the summary) that are not supported by the dialogue. Otherwise leave them blank</h3>
+        <!-- <input type="checkbox" name = "checkbox_100" value = "{{summ_sents[0]}}"> {{summ_sents[0]}} </input>
+        <br>
+        <input type="checkbox" name = "checkbox_200" value = "{{summ_sents[0]}}"> {{summ_sents[0]}} </input>
+        <br>
+        <input type="checkbox" name = "checkbox_300" value = "{{summ_sents[0]}}"> {{summ_sents[0]}} </input>
+        <br>
+        <input type="checkbox" name = "checkbox_400" value = "{{summ_sents[0]}}"> {{summ_sents[0]}} </input>
+        <br>
+        <input type="checkbox" name = "checkbox_500" value = "{{summ_sents[0]}}"> {{summ_sents[0]}} </input>
+        <br>
+        <input type="checkbox" name = "checkbox_600" value = "{{summ_sents[0]}}"> {{summ_sents[0]}} </input>
+        <br> -->
+
+        {% for sent in summ_sents %}
+            <label class="checkbox-label">
+                <input type="checkbox" name = "checkbox_{{loop.index}}" value = "{{sent}}"> {{sent}} </input>
+                <!-- <option value="{{ sent}}">{{ sent}}</option> -->
+            </label>
+            <br>
+
+            
+        {% endfor %}
+       
+        <input name="username" value="{{username}}" type=hidden>
+        <input name="summ_uuid" value="{{docid}}" type=hidden>
+        <input name="system_id" value="{{model}}" type=hidden>
+        <input name="summary" value="{{summary}}" type=hidden>
+        <input name="article" value="{{dialogue}}" type=hidden>
+        <input name="submit_var" value="{{summ_sents |length}}" type=hidden>
+        <br>
+            
+</div>
+
+<button id="clear-button" name = "button" value = "clear">Clear</button>
+<button id="submit-button" name = "button" value = "submit"> Submit</button>
+<button id="black-button" name = "button" value = "back">Back</button>
+
+
+
+
+  {% endblock %}
+</form>
+</div>
+
+</section>

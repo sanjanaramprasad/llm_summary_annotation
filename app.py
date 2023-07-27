@@ -26,8 +26,8 @@ application.secret_key = 'your_secret_key_here'
 
 
 
-directory = '/home/ec2-user/human_annotations_factuality/XSUM_CNN/set1_annotations'
-database_name = 'news_summaries_set1.db'
+directory = '/home/sanjana/explainable_factual_evaluation/datasets/short_dialogue/model_generated/annotations'
+database_name = 'gpt4_summaries_short_sanjana.db'
 db_path = '/%s/%s'%(directory, database_name)
 db_engine = dbEngine=sqlalchemy.create_engine('sqlite:///' + db_path)
 
@@ -81,8 +81,7 @@ class User:
 def get_users():
     users = {
     "sanjana": User(1, "sanjana", "zR46"),
-    "byron": User(2, "byron", "fJ89"),
-    "kundan": User(3, "kundan", "8f*7"),
+    "elisa": User(2, "elisa", "fJ89"),
     "ann_japq": User(4, "ann_japq", "bcxw"),
     "ann_tpfo": User(5, "ann_tpfo", "ydvl"),
     }
@@ -136,37 +135,45 @@ def logout():
     return render_template('logout.html', login_lin = login_link)
 
 
-def get_summary_article_for_uid(summary_uuid) -> Tuple[str]:
-    # return (target, title, predicted) summary for this *prediction* uid.
+def get_summary_article_for_uid(docid) -> Tuple[str]:
     with dbEngine.connect() as con:
-        # sql_query = text("""SELECT article, summary, summary_uuid, summ_id, system_id FROM generated_summaries where summary_uuid='{}';""".format(summary_uuid))
-        stmt = select([generated_summaries.c.article, generated_summaries.c.summary, generated_summaries.c.summary_uuid, \
-                      generated_summaries.c.summ_id, generated_summaries.c.system_id]).where(generated_summaries.c.summary_uuid == summary_uuid)
+        stmt = select([generated_summaries.c.dialogue, generated_summaries.c.summary, generated_summaries.c.docid, generated_summaries.c.model]).where(generated_summaries.c.docid == docid)
         
-        article, summary, summ_uuid, summ_id, system_id = con.execute(stmt).fetchone()
-    return article, summary, summ_uuid, summ_id, system_id
+        dialogue, summary, docid, model = con.execute(stmt).fetchone()
+    return dialogue, summary, docid, model
 
 @login_required
-@application.route('/annotate/<uid>')
-def annotate(summary_uuid):
+@application.route('/annotate/<docid>')
+def annotate(docid):
     # uid is a unique identifier for a *generated*
     # summary. 
     username = current_user.username
-    article, summary, summ_uuid, summ_id, system_id= get_summary_article_for_uid(summary_uuid)
+    dialogue, summary, docid, model= get_summary_article_for_uid(docid)
     summ_sents = list(nlp(summary).sents)
 
-    return render_template("annotate.html", username = username, article= article, summary = summary, summ_sents = summ_sents,  summ_uuid = summ_uuid, summ_id = summ_id, system_id = system_id)
+    dialogue_whole = dialogue
+    
+    dialogue = [] 
+    if ':' in  dialogue_whole.split('\n'):
+        for each in dialogue_whole.split('\n'):
+            dialogue.append((each.split(':')[0], ' '.join(each.split(':')[1:])))
+    else: 
+        for each in dialogue_whole.split('\n'):
+            dialogue.append((each.split(' ')[0], ' '.join(each.split(' ')[1:])))
+    # print(dialogue)
+    speaker_list = list(set([each[0] for each in dialogue]))
+    print(list(set(speaker_list)))
+    return render_template("annotate.html", username = username, dialogue= dialogue, summary = summary, summ_sents = summ_sents,  docid = docid,  model = model, dialogue_whole = dialogue_whole, speaker_list = speaker_list)
 
 @login_required
 def back(current_uuid):
         with dbEngine.connect() as con:
         
             username = current_user.username
-            # sql_query = text(f"""SELECT summary_uuid FROM label WHERE label.user_id = '{username}' ORDER BY summary_uuid;""")
-            stmt = select(label.c.summary_uuid).where(label.c.user_id == username).order_by(label.c.summary_uuid)
+            stmt = select(label.c.docid).where(label.c.user_id == username).order_by(label.c.docid)
             uuids = con.execute(stmt).fetchall()
             uuids = [each[0] for each in uuids]
-            print('ALL LABELED', uuids)
+            # print('ALL LABELED', uuids)
             if current_uuid in uuids:
                 current_uuid_idx = uuids.index(current_uuid)
                 back_uuid = uuids[current_uuid_idx - 1]
@@ -174,81 +181,128 @@ def back(current_uuid):
                 back_uuid =  uuids[-1]
             else:
                 back_uuid = current_uuid
-            # summary_uuid = con.execute("""SELECT summary_uuid FROM generated_summaries where uuid='{}';""".format(back_uuid)).fetchone()
-            print(back_uuid)
+            
             return annotate(back_uuid)
 
 @login_required
-def next():
-        username = current_user.username
-        # print(con.execute("SELECT * FROM label").fetchall())
-        
-        # q_str = text(f"""SELECT summary_uuid FROM generated_summaries WHERE NOT EXISTS (
-        #             SELECT * FROM label WHERE generated_summaries.summary_uuid = label.summary_uuid AND label.user_id = '{username}' ) 
-        #               ORDER BY summary_uuid, RANDOM() LIMIT 1;""")
-        subquery = select([label]).where(and_(generated_summaries.c.summary_uuid == label.c.summary_uuid, label.c.user_id == username))
-        stmt = select(generated_summaries.c.summary_uuid).where(~exists(subquery)).order_by(generated_summaries.c.summary_uuid).limit(1)
-        with dbEngine.connect() as con:
-            #stmt = select(generated_summaries.c.summary_uuid).limit(1)
-            summary_uuid = con.execute(stmt).fetchone()
+@application.route('/next',)
 
+def next():
+        
+        username = current_user.username 
+        subquery = select([label]).where(and_(generated_summaries.c.docid == label.c.docid, label.c.user_id == username))
+        
+        stmt = select(generated_summaries.c.docid).where(~exists(subquery)).order_by(generated_summaries.c.docid).limit(1)
+        with dbEngine.connect() as con:
+            summary_uuid = con.execute(stmt).fetchone()
+            print(con.execute(stmt).fetchall() )
         if summary_uuid is None:
             return render_template("all_done.html")
         
-        print(summary_uuid[0])
+        print('NEXT', summary_uuid[0], username, )
         return annotate(summary_uuid[0])
 
-@login_required
-@application.route('/save_annotation', methods = ['POST'])
-def save_annotation():
-    # print('Annotated by ' , current_user.username)
-    # relevancy_score  = int(request.form['likert_relevance'])
-    num_sentences = int(request.form['submit_var'])
-    uid = str(request.form['summ_uuid'])
-    # print('NUM SENTENCES', num_sentences)
 
-    checked_values = []
-    for i in range(1, num_sentences + 1):
-        key_name = f'checkbox_{i}'
-        if key_name in request.form.keys():
-            checked_values.append(request.form[key_name])
+def process_summ_annotations(request_data_summ):
+    processed_request_data_summ = {v : {}  for each_req in request_data_summ for k , v in each_req.items() if 'Evidence' in v and k == 'type' }
+    # print(processed_request_data_summ)
+
+    for label_num in list(processed_request_data_summ.keys()):
+        for each_request in request_data_summ:
+            if label_num in each_request['type']:
+                nonfactual_spans = each_request['text']
+                error_type = None
+                for other_request in request_data_summ:
+                    # print(other_request)
+                    if (nonfactual_spans == other_request['text']) and ('Error' in other_request['type']):
+                        # print('here')
+                        error_type = other_request['type']
+                processed_request_data_summ[label_num]['nonfactual_spans'] = nonfactual_spans
+                processed_request_data_summ[label_num]['error_type'] = error_type
+                        
+ 
+    return processed_request_data_summ
     
-    if not checked_values:
-        label_type = 'factual'
-    else:
-        label_type = 'non_factual'
+@login_required
+@application.route('/save_annotation', methods=['POST'])
+def save_annotation():
+    print(request.form)
 
     button_val = str(request.form['button'])
-    
-    if button_val == 'submit':
-        username = str(request.form['username'])
-        summ_id = str(request.form['summ_id'])
-        system_id = str(request.form['system_id'])
-        # label_type = "binary"
-        summary = str(request.form['summary'])
-        article = str(request.form['article'])
-
-        with dbEngine.connect() as con:
-            
-            q_str = """INSERT INTO label (user_id, summary_uuid, summ_id, system_id, label_type, summary, nonfactual_sentences, article) VALUES (:value1, :value2, :value3, :value4, :value5, :value6, :value7, :value8)"""
-            values = {'value1': username, 
-                          'value2': uid, 
-                          'value3': summ_id, 
-                          'value4': system_id, 
-                          'value5': label_type, 
-                          'value6': summary, 
-                          'value7': '<new_annotation>'.join(checked_values), 
-                          'value8': article}
-            con.execute(q_str, **values)
-        # con.commit()
-
+    print(button_val, button_val == 'submit')
+    summ_uuid = request.form['summ_uuid']
+    if button_val == 'Submit':
+        username = request.form['username']
         
-        return next()
-    elif button_val == 'clear':
-        return annotate(uid)
-    else:
-        return back(uid)
+        system_id = request.form['system_id']
+        summary = request.form['summary']
+        dialogue = request.form['dlg_whole']
+        request_data_summ = request.form['annotations_summ']
+        request_data_dlg = request.form['annotations_dlg']
+        processed_request_data_summ = {}
+        
+        if (request_data_summ or request_data_dlg):
+            if request_data_summ:
+                request_data_summ = eval(request_data_summ)
+                print(request_data_summ)
+                processed_request_data_summ = process_summ_annotations(request_data_summ)
+                
+            if request_data_dlg.strip():
+                request_data_dlg = eval(request_data_dlg)
+                for each_request in request_data_dlg:
+                    text = each_request['text']
+                    type = each_request['type']
+                    if type in  processed_request_data_summ:
+                        processed_request_data_summ[type]['Evidence'] = text
+        
+            print('ANNOTATIONS', processed_request_data_summ)
+   
+
     
+        with dbEngine.connect() as con:
+                if not processed_request_data_summ:
+                    error_span = ''
+                    error_type = None
+                    evidence = None
+                    q_str = """INSERT INTO label (user_id, docid, model, nonfactual_spans, evidence, error_type, summary, dialogue) VALUES (:value1, :value2, :value3, :value4, :value5, :value6, :value7, :value8)"""
+                    values = {'value1': username, 
+                              'value2': summ_uuid, 
+                              'value3': system_id, 
+                              'value4': error_span, 
+                              'value5': evidence, 
+                              'value6': error_type,
+                              'value7': summary, 
+                              'value8': dialogue}
+                    con.execute(q_str, **values)
+
+                else:
+                    
+                    for error_key, error_val in processed_request_data_summ.items():
+                        print(username)
+                        error_span = error_val['nonfactual_spans']
+                        error_type = error_val['error_type']
+                        evidence = None
+                        q_str = """INSERT INTO label (user_id, docid, model, nonfactual_spans, evidence, error_type, summary, dialogue) VALUES (:value1, :value2, :value3, :value4, :value5, :value6, :value7, :value8)"""
+                        values = {'value1': username, 
+                                  'value2': summ_uuid, 
+                                  'value3': system_id, 
+                                  'value4': error_span, 
+                                  'value5': evidence, 
+                                  'value6': error_type,
+                                  'value7': summary, 
+                                  'value8': dialogue}
+                        con.execute(q_str, **values)
+            #     con.commit()
+                
+            # print(username, summ_uuid)
+            # print('LABELS', con.execute('SELECT * FROM label').fetchone())
+    
+        return next()
+
+    elif button_val == 'Back':
+        return back(summ_uuid)
+    
+
 
 if __name__ == "__main__":
     application.run(host='0.0.0.0', port=8080)

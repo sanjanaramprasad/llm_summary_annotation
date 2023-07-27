@@ -1,8 +1,8 @@
-<!doctype html>
-
+<!DOCTYPE html>
+<html>
 <head>
+    
     <style>
-
         .container {
 			position: relative;
 			height: 100px;
@@ -10,6 +10,7 @@
 		}
 
 		#black-button {
+            margin-top: 20px;
 			position: absolute;
 			left: 10px;
 			background-color: black;
@@ -23,8 +24,9 @@
 		}
 
         #submit-button {
+            margin-top: 20px;
 			position: absolute;
-			right: 100px;
+			right: 10px;
 			background-color: green;
 			color: white;
 			padding: 5px 20px;
@@ -35,10 +37,11 @@
 			cursor: pointer;
 		}
 
-        #clear-button {
+        #clear-evdx-button {
+            margin-top: 20px;
 			position: absolute;
 			left: 100px;
-			background-color: orange;
+			background-color: blue;
 			color: white;
 			padding: 5px 20px;
 			border: none;
@@ -47,7 +50,20 @@
 			font-weight: bold;
 			cursor: pointer;
 		}
-    
+
+        #clear-errx-button {
+            margin-top: 20px;
+			position: absolute;
+			right: 150px;
+			background-color: gray;
+			color: white;
+			padding: 5px 20px;
+			border: none;
+			border-radius: 10px;
+			font-size: 16px;
+			font-weight: bold;
+			cursor: pointer;
+		}
         
 		input[type="checkbox"]{
             -webkit-appearance: initial;
@@ -85,103 +101,414 @@
             * left: 0;
             */
         }
- 
 
+        .selected {
+            background-color: yellow;
+            position: relative;
+            color: black;
+        }
 
-	</style>
+        .selected_error {
+            background-color: yellow;
+            position: relative;
+        }
 
-    <title>Annotation Dashboard</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-      $(function() {
-        $(window).on('beforeunload', function() {
-          $.ajax({
-            url: '/logout',
-            type: 'POST',
-            async: false
-          });
-        });
-      });
+        .selected::after {
+            content: attr(data-type);
+            position: absolute;
+            top: -1.2em;
+            right: 0;
+            font-size: 0.7em;
+            background-color: #4d4dff;
+            padding: 0.1em 0.3em;
+            border-radius: 0.2em;
+            color: #fff;
+        }
+        .selected_error::after {
+            content: attr(data-type);
+            position: absolute;
+            top: -1.2em;
+            left: 0;
+            font-size: 0.7em;
+            background-color: pink;
+            padding: 0.1em 0.3em;
+            border-radius: 0.2em;
+        }
+
+        .speaker_1 {
+            
+            background-color: #007bff; /* Background color of the bubble */
+            color: #fff; /* Text color inside the bubble */
+            padding: 1em; 
+            border-radius: 10px;
+            line-height: 1;
+            margin: 0.01em 10; 
+            float: left;
+        }
+        .speaker_2 {
+            background-color: green; /* Background color of the bubble */
+            color: #fff; /* Text color inside the bubble */
+            padding: 1em; 
+            border-radius: 10px;
+            line-height: 1;
+            margin: 0.01em 10; 
+            float: left;
+        }
+
+        .speaker_3 {
+            background-color: #F17EDD; /* Background color of the bubble */
+            color: #fff; /* Text color inside the bubble */
+            padding: 1em; 
+            border-radius: 10px;
+            line-height: 1;
+            margin: 0.01em 10; 
+            float: left;
+        }
+
+        .speaker_4 {
+            background-color: orange; /* Background color of the bubble */
+            color: #fff; /* Text color inside the bubble */
+            padding: 1em; 
+            border-radius: 10px;
+            line-height: 1;
+            margin: 0.01em 10; 
+            float: left;
+        }
+
+        .speaker_5 {
+            background-color: #A41DFC; /* Background color of the bubble */
+            color: #fff; /* Text color inside the bubble */
+            padding: 1em; 
+            border-radius: 10px;
+            line-height: 1;
+            margin: 0.01em 10; 
+            float: left;
+        }
+    .highl
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js">
+        
+        
     </script>
-  </head>
+</head>
+<body>
+    <!-- <h1>Named Entity Annotation</h1>
 
-<title>Annotate</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-<section class="content">
-  
-  
-  {% block content %}
+    <div>
+        <p>
+            Text: <span id="text">The quick brown fox jumps over the lazy dog.</span>
+        </p>
+    </div> -->
+<form id = "form1" action="/save_annotation" onsubmit="return validateForm();" method="post"  >
+    <div id="dialogue" style="width:45%; height:440px;float: left;overflow:auto;background-color: lightgrey;border: 15px lightgreyn;padding: 10px;margin: 12px; border-radius: 25px;white-space: pre-wrap;">
+        <h1> Dialogue </h1>
+        <!-- {{dialogue_whole}} -->
+        <div id = "dlg">
+                {% for chunk in dialogue %}
+                    
+                    {% if speaker_list.0 == chunk[0] %}
+                        <div class="speaker_1">{{chunk[0]}} : {{ chunk[1] }}</div>
+            
+                    {% elif  speaker_list.1 == chunk[0]%}
+                        <div class="speaker_2">{{chunk[0]}} : {{ chunk[1] }}</div>
 
+                    {% elif  speaker_list.2 == chunk[0]%}
+                        <div class="speaker_3">{{chunk[0]}} : {{ chunk[1] }}</div>
 
+                    {% elif  speaker_list.3 == chunk[0]%}
+                        <div class="speaker_4">{{chunk[0]}} : {{ chunk[1] }}</div>
 
-  <br/><br/>
-  <!-- <h1> Article </h1>  -->
-  <div style="width: 100%; overflow: hidden;">
-    <div id="article" style="width:45%; height:440px;float: left;overflow:auto;background-color: lightgrey;border: 15px lightgreyn;padding: 10px;margin: 12px; border-radius: 25px;">
-        <h1> Article </h1>
-        <p style ="color: darkblue; line-height: 1.5;"> {{ article }}</p>
+                    {% elif  speaker_list.4 == chunk[0]%}
+                        <div class="speaker_5">{{chunk[0]}} : {{ chunk[1] }}</div>
+
+                    {%else %}
+                        <div class="speaker_1">{{chunk[0]}} : {{ chunk[1] }}</div>
+                    {% endif %}
+                {% endfor %}
+        
+        </div>
+        
 
         <br/><br/>
     </div>
 
-    <!-- border: 15px lightgreyn;padding: 10px;margin: 20px; border-radius: 15px; ">-->
-    <div id="system-summary" style="width:45%; height:440px;float: right; background-color: lightgoldenrodyellow;border: 15px lightgreyn;padding: 10px;margin: 12px; border-radius: 25px;">
+    
+    <div id="system-summary" style="width:45%; height:440px;float: right; background-color: lightgrey;border: 15px lightgreyn;padding: 10px;margin: 12px; border-radius: 25px;">
+        
         <h2>System Summary</h2>
-        <p style ="color: darkblue; line-height: 1.5;">{{ summary }}</p>
+        <!-- <p > -->
+            <span id = "summ" style ="color: darkblue; line-height: 1.5;"> {{ summary }} </span>
+        <!-- </p> -->
     </div>
-</div>
-
-<br/><br/>
-<hr>
- <div id=".container">
  
-  <form action="/save_annotation" method="post">
+    <div>
+        <h3>Evidence and Error</h3>
+        <select id="error-evidence-select">
+            <option value="">Select error evidence span</option>
+            <option value="Error Evidence1">Error_Evidence1</option>
+            <option value="Error Evidence2">Error_Evidence2</option>
+            <option value="Error Evidence3">Error_Evidence3</option>
+            <option value="NONE">NONE</option>
+        </select>
 
- 
-        <h3> Select the sentences below (from the summary) that are not supported by the source article. Otherwise leave them blank</h3>
-        <!-- <input type="checkbox" name = "checkbox_100" value = "{{summ_sents[0]}}"> {{summ_sents[0]}} </input>
-        <br>
-        <input type="checkbox" name = "checkbox_200" value = "{{summ_sents[0]}}"> {{summ_sents[0]}} </input>
-        <br>
-        <input type="checkbox" name = "checkbox_300" value = "{{summ_sents[0]}}"> {{summ_sents[0]}} </input>
-        <br>
-        <input type="checkbox" name = "checkbox_400" value = "{{summ_sents[0]}}"> {{summ_sents[0]}} </input>
-        <br>
-        <input type="checkbox" name = "checkbox_500" value = "{{summ_sents[0]}}"> {{summ_sents[0]}} </input>
-        <br>
-        <input type="checkbox" name = "checkbox_600" value = "{{summ_sents[0]}}"> {{summ_sents[0]}} </input>
-        <br> -->
+        <select id="error-type-select">
+            <option value="">Select error evidence span</option>
+            <option value="Intrinsic_Error">Intrinsic_Error</option>
+            <option value="Extrinsic_Error">Extrinsic_Error</option>
+            <option value="NONE">NONE</option>
+        </select>
+    </div>
 
-        {% for sent in summ_sents %}
-            <label class="checkbox-label">
-                <input type="checkbox" name = "checkbox_{{loop.index}}" value = "{{sent}}"> {{sent}} </input>
-                <!-- <option value="{{ sent}}">{{ sent}}</option> -->
-            </label>
-            <br>
+    <input id = "username" name="username" value="{{username}}" type=hidden>
+        <input id = "summ_uuid" name="summ_uuid" value="{{docid}}" type=hidden>
+        <input id = "system_id" name="system_id" value="{{model}}" type=hidden>
+        <input id = "summary" name="summary" value="{{summary}}" type=hidden>
+        <input id = "dlg_whole" name="dlg_whole" value="{{dialogue_whole}}" type=hidden>
+        <input id = "annotations_dlg" name="annotations_dlg" value="" type=hidden>
+        <input id = "dlg_copy" name="dlg_copy" value="" type=hidden>
+        <script>
+            var dlgContent = $('#dlg').html();
+            $('#dlg_copy').val(dlgContent);
+        </script>
+        <input id = "annotations_summ" name="annotations_summ" value="" type=hidden>
+        <input id = "submit_var" name="submit_var" value="{{summ_sents |length}}" type=hidden>
 
-            
-        {% endfor %}
-       
-        <input name="username" value="{{username}}" type=hidden>
-        <input name="summ_uuid" value="{{summ_uuid}}" type=hidden>
-        <input name="summ_id" value="{{summ_id}}" type=hidden>
-        <input name="system_id" value="{{system_id}}" type=hidden>
-        <input name="summary" value="{{summary}}" type=hidden>
-        <input name="article" value="{{article}}" type=hidden>
-        <input name="submit_var" value="{{summ_sents |length}}" type=hidden>
-        <br>
-            
-</div>
-
-<button id="clear-button" name = "button" value = "clear">Clear</button>
-<button id="submit-button" name = "button" value = "submit"> Submit</button>
-<button id="black-button" name = "button" value = "back">Back</button>
-
-
-
-
-  {% endblock %}
+<button id="black-button" name = "button" type="Submit" value="Back">Back</button>
+<button id="submit-button" name = "button" type="Submit" value="Submit">Submit</button>
+<button id="clear-evdx-button" type = "Button">Undo Evidence</button>
+<button id="clear-errx-button" type = "Button">Undo Error</button>
 </form>
-</div>
 
-</section>
+    <script>
+
+        
+        
+        $(document).ready(function() {
+            var annotations_summ = [];
+            var annotations_dlg = [];
+
+            
+            function updateAnnotationsDlg() {
+                var text = $('#dlg_copy').val();
+                var annotationsHtml = text;
+                // alert(JSON.stringify(annotations_dlg));
+                for (var i = 0; i < annotations_dlg.length; i++) {
+                    var annotation = annotations_dlg[i];
+                    var start = annotationsHtml.indexOf(annotation.text.trim());
+                    if (start !== -1) {
+                        var end = start + annotation.text.length;
+                        var superscript = '<sup>' + annotation.type + '</sup>'
+                        if (annotation.type.indexOf("Evidence") !== -1){
+                            var annotatedSpan = '<span class="selected" data-type="' + annotation.type + '">' + annotationsHtml.substring(start, end) +'</span>';
+                        }
+                        else {
+                            var annotatedSpan = '<span class="selected_error" data-type="' + annotation.type + '">' + annotationsHtml.substring(start, end) +'</span>';
+                        }
+                        // var annotatedSpan = '<span class="selected" data-type="' + annotation.type + '">' + annotationsHtml.substring(start, end) +'</span>';
+                        annotationsHtml = annotationsHtml.substring(0, start) + annotatedSpan + annotationsHtml.substring(end);
+                        // alert(annotationsHtml);
+                        
+                        
+                    }
+                }
+                
+                $('#dlg').html(annotationsHtml);
+                document.getElementById('annotations_dlg').value = JSON.stringify(annotations_dlg);
+                // alert($('#annotations_dlg').val());
+            }
+
+            function updateAnnotationsSumm() {
+                var text =  $('#summary').val();
+                // alert(JSON.stringify(text));
+                var annotationsHtml = text;
+                
+                for (var i = 0; i < annotations_summ.length; i++) {
+                    var annotation = annotations_summ[i];
+                    var start = annotationsHtml.indexOf(annotation.text.trim());
+                    if (start !== -1) {
+                        var end = start + annotation.text.length;
+                        var superscript = '<sup>' + annotation.type + '</sup>'
+                        
+                        if (annotation.type.indexOf("Evidence") !== -1){
+                            var annotatedSpan = '<span class="selected" data-type="' + annotation.type + '">' + annotationsHtml.substring(start, end) +'</span>';
+                        }
+                        else {
+                            var annotatedSpan = '<span class="selected_error" data-type="' + annotation.type + '">' + annotationsHtml.substring(start, end) +'</span>';
+                        }
+                        
+                        annotationsHtml = annotationsHtml.substring(0, start) + annotatedSpan + annotationsHtml.substring(end);
+                        // alert(annotationsHtml);
+                        
+                    }
+                }
+                $('#summ').html(annotationsHtml);
+                // alert(annotationsHtml);
+                document.getElementById('annotations_summ').value = JSON.stringify(annotations_summ);
+                // alert($('#annotations_summ').val())
+            }
+
+            function removeAnnotationSumm(selectedText) {
+                annotations_summ = annotations_summ.filter(function(annotation) {
+                    return annotation.text !== selectedText;
+                });
+                // updateAnnotationsSumm();
+            }
+
+            function removeAnnotationDlg(selectedText) {
+                annotations_dlg = annotations_dlg.filter(function(annotation) {
+                    return annotation.text !== selectedText;
+                });
+                // updateAnnotationsDlg();
+            }
+
+
+            $('#summ').mouseup(function() {
+                var selectedText = window.getSelection().toString();
+                var update_entityType = false;
+                var update_errtype = false;
+                var errorTypesSumm = annotations_summ.map(function(annotation) {
+                    return annotation.type;
+                });
+                var entityType = $('#error-evidence-select').val();
+                var errorType = $('#error-type-select').val();
+                // alert(JSON.stringify(annotations_summ));
+                if (selectedText !== '') {
+                    
+                    
+                    if (entityType === 'NONE') {
+                        removeAnnotationSumm(selectedText);
+                        update_entityType = true;
+                    } 
+                    else if (entityType !== '') {
+                        if (errorTypesSumm.includes(entityType)){
+                            alert('Already annotated pick another label');
+                            update_entityType = false;
+                        }
+                        else{
+                        update_entityType = true;}
+                    }
+                    else{
+                        alert('Please pick label number');
+                        update_entityType = false;
+                    }
+
+                    if(errorType === 'NONE'){
+                        update_errtype = true;
+                    } else if (errorType !== '') {
+                        
+                        update_errtype = true;
+                    }
+                    else {
+                        alert('Please choose an appropriate error type');
+                        update_errtype = false;
+                    }
+                }
+        
+                if(update_errtype === true && update_entityType === true){
+                    if ( errorType === 'NONE' || entityType === 'NONE'){
+                        removeAnnotationSumm(selectedText);
+                    }
+                    else{ 
+                        var annotation = {
+                            text: selectedText,
+                            type: entityType
+                        };
+                        annotations_summ.push(annotation);
+                        var annotation_errtype = {
+                                text: selectedText,
+                                type: errorType
+                            };
+                        annotations_summ.push(annotation_errtype);
+                    }
+                    updateAnnotationsSumm();
+                }
+            });
+
+            $('#dlg').mouseup(function() {
+                var selectedText = window.getSelection().toString();
+                var update = false;
+                if (selectedText !== '') {
+                    var entityType = $('#error-evidence-select').val();
+                    
+                    if (entityType === 'NONE') {
+                        removeAnnotationDlg(selectedText);
+                        update = true;
+                    } else if (entityType !== '') {
+                        var annotation = {
+                            text: selectedText,
+                            type: entityType
+                        };
+                        annotations_dlg.push(annotation);
+                        update = true;
+                    }
+                    
+                }
+
+                if(update === true){
+                    updateAnnotationsDlg();
+                }
+            });
+
+            
+            
+            function undoLastAnnotation() {
+                if (annotations_dlg.length > 0) {
+                    const lastAnnotation = annotations_dlg.pop();
+                    // alert(JSON.stringify(annotations_dlg));
+                    updateAnnotationsDlg();
+                }
+            }
+
+            document.getElementById('clear-evdx-button').addEventListener('click', function() {
+                // alert(JSON.stringify(annotations_dlg));
+                undoLastAnnotation();
+            });
+
+            document.getElementById('clear-errx-button').addEventListener('click', function() {
+                // alert(JSON.stringify(annotations_dlg));
+                if (annotations_summ.length > 1) {
+                    const lastAnnotation1 = annotations_summ.pop();
+                    const lastAnnotation2 = annotations_summ.pop();
+                    updateAnnotationsSumm();
+                }
+            });
+
+            
+        });
+
+        function validateForm(){
+            // annotations_dlg = $('#annotations_dlg').val();
+            annotations_dlg = document.getElementById('annotations_dlg').value;
+            annotations_summ = document.getElementById('annotations_summ').value;
+            // alert(annotations_summ);
+            var errorTypesDlg = [];
+            var errorTypesSumm = [];
+            // if (annotations_summ.length ==
+            for (var i = 0; i < annotations_summ.length; i++){
+                var annotation = annotations_summ[i];
+                    if (annotation.type.includes('Evidence')){
+                        errorTypesSumm.push(annotation.type);
+                    }
+                }
+            for (var i = 0; i < annotations_dlg.length; i++){
+                    var annotation = annotations_dlg[i];
+                    if(errorTypesDlg.indexOf(annotation.type) === -1){
+                        errorTypesDlg.push(annotation.type);
+                    }
+            }
+            alert(errorTypesDlg.length);
+            if(errorTypesSumm.length === errorTypesDlg.length){
+                return true;
+            }
+            else{
+                alert("Please make sure you've picked evidence for all annotated error spans and vice versa.")
+                return false;
+            }
+            }
+    </script>
+
+    
+
+    
+</body>
+</html>
